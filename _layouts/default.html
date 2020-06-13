@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en-US" }}">
+  <head>
+
+    {% if site.google_analytics %}
+      <script async src="https://www.googletagmanager.com/gtag/js?id={{ site.google_analytics }}"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ site.google_analytics }}');
+      </script>
+    {% endif %}
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+  </head>
+  <body>
+     <canvas id="canvas" >
+     </canvas>
+  </body>
+
+  <script>
+    function HSVtoRGB(h, s, v) {
+      var r, g, b, i, f, p, q, t;
+      if (arguments.length === 1) {
+        s = h.s, v = h.v, h = h.h;
+      }
+      i = Math.floor(h * 6);
+      f = h * 6 - i;
+      p = v * (1 - s);
+      q = v * (1 - f * s);
+      t = v * (1 - (1 - f) * s);
+      switch (i % 6) {
+      case 0: r = v, g = t, b = p; break;
+      case 1: r = q, g = v, b = p; break;
+      case 2: r = p, g = v, b = t; break;
+      case 3: r = p, g = q, b = v; break;
+      case 4: r = t, g = p, b = v; break;
+      case 5: r = v, g = p, b = q; break;
+      }
+
+      return "rgb(" + Math.round(r * 255) + ", " + Math.round(g * 255) + ", " + Math.round(b * 255) + ")";
+    }
+
+    function main() {
+      var canvas = document.getElementById("canvas");
+      var w = canvas.width = window.innerWidth;
+      var h = canvas.height = window.innerHeight;
+
+      var ctx = canvas.getContext("2d");
+      ctx.lineWidth = 5;
+
+      var r = 0;
+      var x = Math.random() * w;
+      var y = Math.random() * h;
+      var vX = 0, vY = 0;
+
+      var hue = Math.random();
+
+      window.mouseX = x;
+      window.mouseY = y;
+      window.lastT = new Date().getTime();
+
+      canvas.addEventListener('mousemove', e => {
+        window.mouseX = e.offsetX;
+        window.mouseY = e.offsetY;
+      });
+
+      function draw() {
+        var t = new Date().getTime();
+        var dT = (t - lastT) / 1000;
+        window.lastT = t;
+
+        var aX = (mouseX - x) / 2;
+        var aY = (mouseY - y) / 2;
+
+        vX += aX * dT;
+        vY += aY * dT;
+        v = Math.sqrt(vX*vX + vY*vY);
+
+        var dX = vX * dT;
+        var dY = vY * dT;
+        var d = Math.sqrt(dX*dX + dY*dY);
+        ctx.lineWidth = d * 2;
+
+        x += dX;
+        y += dY;
+
+        if (x <= 0 || x >= w) vX = -vX;
+        if (y <= 0 || y >= h) vY = -vY;
+
+        r = Math.abs(200 - v / 2) + 2;
+
+        console.log(dT, x, v);
+
+        hue = (hue + 100 + Math.sqrt(v) / 5000) % 1;
+
+        ctx.beginPath();
+        ctx.rect(0, 0, w, h);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.003)";
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 2 * Math.PI);
+        ctx.fillStyle = HSVtoRGB(hue, 1, 1);
+        ctx.fill();
+
+        setTimeout(draw, 20);
+      }
+
+      setTimeout(draw, 5);
+    }
+
+    window.onload = main;
+  </script>
+</html>
